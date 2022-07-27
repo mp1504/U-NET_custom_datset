@@ -1,8 +1,13 @@
 
 import numpy as np
-import glob, os
+import glob, os, argparse
 from keras.utils import img_to_array, load_img
 
+def argparser():
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description = 'U-NET implementation using Keras')
+    parser.add_argument('--height', type=int, default=256, help='height of the resized image', metavar='')
+    parser.add_argument('--width', type=int, default=256, help='height of the resized image', metavar='')
+    return parser.parse_args()
 
 class dataProcess(object):
     def __init__(self, out_rows, out_cols, data_path="./data/train/images", label_path="./data/train/labels",
@@ -26,8 +31,8 @@ class dataProcess(object):
             imgpath = imgs[x]
             pic_name = imgpath.split(os.sep)[-1]
             labelpath = self.label_path + os.sep + pic_name
-            img = load_img(imgpath, color_mode="rgb", target_size=[512, 512])
-            label = load_img(labelpath, color_mode = "grayscale", target_size=[512, 512])
+            img = load_img(imgpath, color_mode="rgb", target_size=[self.out_rows, self.out_cols])
+            label = load_img(labelpath, color_mode = "grayscale", target_size=[self.out_rows, self.out_cols])
             img = img_to_array(img)
             label = img_to_array(label)
             imgdatas[x] = img
@@ -51,7 +56,7 @@ class dataProcess(object):
         for imgname in imgs:
             testpath = imgname
             testpathlist.append(testpath)
-            img = load_img(testpath, color_mode="rgb", target_size=[512, 512])
+            img = load_img(testpath, color_mode="rgb", target_size=[self.out_rows, self.out_cols])
             img = img_to_array(img)
             imgdatas[i] = img
             if i % 100 == 0 and i > 0:
@@ -75,7 +80,7 @@ class dataProcess(object):
         imgs_train /= 255
         imgs_mask_train /= 255
         imgs_mask_train[imgs_mask_train > 0.5] = 1  
-        imgs_mask_train[imgs_mask_train <= 0.5] = 0 
+        imgs_mask_train[imgs_mask_train <= 0.5] = 0
         return imgs_train, imgs_mask_train
 
     def load_test_data(self):
@@ -87,9 +92,8 @@ class dataProcess(object):
         imgs_test /= 255
         return imgs_test
 
-
-
 if __name__ == "__main__":
-    mydata = dataProcess(512, 512)
+    args = argparser()
+    mydata = dataProcess(args.height, args.width)
     mydata.create_train_data()
     mydata.create_test_data()
